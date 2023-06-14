@@ -1,0 +1,9 @@
+transformers == 4.30.1
+peft == 0.3.0
+tree_sitter == 0.20.1
+pandas
+numpy
+os
+codecs
+torch
+fastapi
