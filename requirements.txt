@@ -7,3 +7,8 @@ os
 codecs
 torch
 fastapi
+pydantic
+uvicorn
+typing
+shutil
+base64
