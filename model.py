@@ -1,5 +1,6 @@
 import torch.nn as nn
-from transformers import RobertaForSequenceClassification, AutoTokenizer
+from torch.nn import CrossEntropyLoss
+from transformers import RobertaForSequenceClassification, AutoTokenizer, set_seed
 from torch.utils.data import Dataset, SequentialSampler, DataLoader
 import pandas as pd
 import os
@@ -22,16 +23,6 @@ tokenizer = AutoTokenizer.from_pretrained(base)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 n_gpu = torch.cuda.device_count()
 set_seed(n_gpu)
-
-config = RobertaConfig.from_pretrained(base)
-config.num_labels = 1
-model = RobertaForSequenceClassification.from_pretrained(base, config=config, ignore_mismatched_sizes=True).to(device)
-model = Model(model, config, tokenizer)
-model.to(device)
-
-#model.load_state_dict(torch.load(pretrain_model_path, map_location=device))
-config = PeftConfig.from_pretrained(model_id)
-model = PeftModel.from_pretrained(model, model_id)
 
 
 #Настраиваем пул наших языков
@@ -157,6 +148,17 @@ class TextData(Dataset):
 
     def __getitem__(self, i):
         return torch.tensor(self.examples[i].input_ids), str(self.examples[i].func)
+
+
+config = RobertaConfig.from_pretrained(base)
+config.num_labels = 1
+model = RobertaForSequenceClassification.from_pretrained(base, config=config, ignore_mismatched_sizes=True).to(device)
+model = Model(model, config, tokenizer)
+model.to(device)
+
+#model.load_state_dict(torch.load(pretrain_model_path, map_location=device))
+config = PeftConfig.from_pretrained(model_id)
+model = PeftModel.from_pretrained(model, model_id)
 
 
 def cleaner(code):

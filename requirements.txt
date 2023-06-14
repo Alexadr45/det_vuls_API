@@ -3,12 +3,7 @@ peft == 0.3.0
 tree_sitter == 0.20.1
 pandas
 numpy
-os
-codecs
 torch
 fastapi
 pydantic
 uvicorn
-typing
-shutil
-base64
