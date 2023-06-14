@@ -1,5 +1,83 @@
 import torch.nn as nn
-from transformers import RobertaForSequenceClassification
+from transformers import RobertaForSequenceClassification, AutoTokenizer
+from torch.utils.data import Dataset, SequentialSampler, DataLoader
+import pandas as pd
+import os
+import tree_sitter
+from tree_sitter import Language, Parser
+import codecs
+import torch
+import random
+import numpy as np
+from transformers import RobertaConfig
+from peft import PeftModel, PeftConfig
+from tqdm import tqdm
+import re
+
+
+base = 'microsoft/unixcoder-base'
+model_id = "Model"
+
+tokenizer = AutoTokenizer.from_pretrained(base)
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+n_gpu = torch.cuda.device_count()
+set_seed(n_gpu)
+
+config = RobertaConfig.from_pretrained(base)
+config.num_labels = 1
+model = RobertaForSequenceClassification.from_pretrained(base, config=config, ignore_mismatched_sizes=True).to(device)
+model = Model(model, config, tokenizer)
+model.to(device)
+
+#model.load_state_dict(torch.load(pretrain_model_path, map_location=device))
+config = PeftConfig.from_pretrained(model_id)
+model = PeftModel.from_pretrained(model, model_id)
+
+
+#Настраиваем пул наших языков
+Language.build_library(
+  # Store the library in the `build` directory
+  'build/my-languages.so',
+
+  # Include one or more languages
+  [
+ #   'tree-sitter-python',
+    'tree-sitter-c-sharp'
+  ]
+)
+
+#Настраиваем парсер для C#
+parser = Parser()
+CSHARP_LANGUAGE = Language('build/my-languages.so', 'c_sharp')
+parser.set_language(CSHARP_LANGUAGE)
+
+#Функция для считывания содержимого
+def file_inner(path):
+    with codecs.open(path, 'r', 'utf-8') as file:
+        code = file.read()
+    return code
+
+#Функция выделения метода из файла
+def parsing(code):
+    snippets = []
+    #Строим дерево по нашему файлу
+    tree = parser.parse(bytes(code, "utf8"))
+    #Прыгаем по дереву
+    root_node = tree.root_node
+    #print(root_node.children)
+    for node in root_node.children:
+        if node.type == "namespace_declaration":
+            for node in node.children:
+                if node.type == 'declaration_list':
+                    for node in node.children:
+                        if node.type == 'class_declaration':
+                            for node in node.children:
+                                if node.type == 'declaration_list':
+                                    for node in node.children:
+                                        if node.type == 'method_declaration':
+                                            snippets.append(code[node.start_byte: node.end_byte])
+    return snippets
+
 
 class RobertaClassificationHead(nn.Module):
     """Head for sentence-level classification tasks."""
@@ -55,3 +133,166 @@ class Model(RobertaForSequenceClassification):
                 return loss, prob
             else:
                 return prob
+            
+            
+class Input(object):
+    """A single training/test features for a example."""
+    def __init__(self,
+                 input_tokens,
+                 input_ids,
+                 func):
+        self.input_tokens = input_tokens
+        self.input_ids = input_ids
+        self.func=func
+
+
+class TextData(Dataset):
+    def __init__(self, tokenizer, funcs):
+        self.examples = []
+        for i in tqdm(range(len(funcs))):
+            self.examples.append(tokenize_samples(funcs[i], tokenizer))
+
+    def __len__(self):
+        return len(self.examples)
+
+    def __getitem__(self, i):
+        return torch.tensor(self.examples[i].input_ids), str(self.examples[i].func)
+
+
+def cleaner(code):
+    ## Remove code comments
+    pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)')
+    code = re.sub(pat,'',code)
+    code = re.sub('\r','',code)
+    code = re.sub('\t','',code)
+    code = code.split('\n')
+    code = [line + '\n' for line in code if line.strip()]
+    code = ''.join(code)
+    return(code)
+
+
+def set_seed(n_gpu, seed = 42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if n_gpu > 0:
+        torch.cuda.manual_seed_all(seed)
+
+
+def tokenize_samples(func, tokenizer, block_size = 512):
+    clean_func = cleaner(func)
+    code_tokens = tokenizer.tokenize(str(clean_func))[:block_size-2]
+    source_tokens = [tokenizer.cls_token] + code_tokens + [tokenizer.sep_token]
+    source_ids = tokenizer.convert_tokens_to_ids(source_tokens)
+    padding_length = block_size - len(source_ids)
+    source_ids += [tokenizer.pad_token_id] * padding_length
+    return Input(source_tokens, source_ids, clean_func)
+
+
+def clean_special_token_values(all_values, padding=False):
+    # special token in the beginning of the seq
+    all_values[0] = 0
+    if padding:
+        # get the last non-zero value which represents the att score for </s> token
+        idx = [index for index, item in enumerate(all_values) if item != 0][-1]
+        all_values[idx] = 0
+    else:
+        # special token in the end of the seq
+        all_values[-1] = 0
+    return all_values
+
+
+def get_word_att_scores(all_tokens: list, att_scores: list) -> list:
+    word_att_scores = []
+    for i in range(len(all_tokens)):
+        token, att_score = all_tokens[i], att_scores[i]
+        word_att_scores.append([token, att_score.cpu().detach().numpy()])
+    return word_att_scores
+
+
+def get_all_lines_score(word_att_scores: list):
+    # verified_flaw_lines = [''.join(l) for l in verified_flaw_lines]
+    # word_att_scores -> [[token, att_value], [token, att_value], ...]
+    separator = ["Ċ", " Ċ", "ĊĊ", " ĊĊ"]
+    # to return
+    all_lines_score = []
+    score_sum = 0
+    line_idx = 0
+    flaw_line_indices = []
+    line = ""
+    for i in range(len(word_att_scores)):
+        # summerize if meet line separator or the last token
+        if ((word_att_scores[i][0] in separator) or (i == (len(word_att_scores) - 1))) and score_sum != 0:
+            score_sum += word_att_scores[i][1]
+            all_lines_score.append(score_sum)
+            line = ""
+            score_sum = 0
+            line_idx += 1
+        # else accumulate score
+        elif word_att_scores[i][0] not in separator:
+            line += word_att_scores[i][0]
+            score_sum += word_att_scores[i][1]
+    return all_lines_score
+
+
+def find_vul_lines(tokenizer, inputs_ids, attentions):
+    ids = inputs_ids[0].detach().tolist()
+    all_tokens = tokenizer.convert_ids_to_tokens(ids)
+    all_tokens = [token.replace("Ġ", "") for token in all_tokens]
+    all_tokens = [token.replace("ĉ", "Ċ") for token in all_tokens]
+    original_lines = ''.join(all_tokens).split("Ċ")
+
+    # take from tuple then take out mini-batch attention values
+    attentions = attentions[0][0]
+    attention = None
+    # go into the layer
+    for i in range(len(attentions)):
+        layer_attention = attentions[i]
+        # summerize the values of each token dot other tokens
+        layer_attention = sum(layer_attention)
+        if attention is None:
+            attention = layer_attention
+        else:
+            attention += layer_attention
+    # clean att score for <s> and </s>
+    attention = clean_special_token_values(attention, padding=True)
+    # attention should be 1D tensor with seq length representing each token's attention value
+    word_att_scores = get_word_att_scores(all_tokens=all_tokens, att_scores=attention)
+    all_lines_score = get_all_lines_score(word_att_scores)
+    all_lines_score_with_label = sorted(range(len(all_lines_score)), key=lambda i: all_lines_score[i], reverse=True)
+    return all_lines_score_with_label
+
+
+
+
+def predict(model, tokenizer, funcs, best_threshold = 0.5, do_linelevel_preds = True):
+
+    check_dataset = TextData(tokenizer, funcs)
+    check_sampler = SequentialSampler(check_dataset)
+    check_dataloader = DataLoader(check_dataset, sampler=check_sampler, batch_size=1, num_workers=0)
+
+    model.to(device)
+    y_preds = []
+    all_vul_lines = []
+    orig_funcs = []
+    model.eval()
+    for batch in check_dataloader:
+        inputs_ids =  batch[0].to(device)
+        func = batch[1]
+        with torch.no_grad():
+            # attentions: a tuple with of one Tensor with 4D shape (batch_size, num_heads, sequence_length, sequence_length)
+            logit, attentions = model(input_ids=inputs_ids, output_attentions=True)
+            pred = logit.cpu().numpy()[0][1] > best_threshold
+            if pred:
+                vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
+            else:
+                vul_lines = None
+            all_vul_lines.append(vul_lines[:10])
+            y_preds.append(pred)
+            orig_funcs.append(func)
+    if do_linelevel_preds:
+        result = {'methods': orig_funcs, 'vulnerable': y_preds, 'vul_lines': all_vul_lines}
+        return result
+    else:
+        result = {'methods': orig_funcs, 'vulnerable': y_preds}
+        return result
