@@ -54,32 +54,53 @@ parser = Parser()
 CSHARP_LANGUAGE = Language('build/my-languages.so', 'c_sharp')
 parser.set_language(CSHARP_LANGUAGE)
 
-#Функция для считывания содержимого
-def file_inner(path):
-    with codecs.open(path, 'r', 'utf-8') as file:
-        code = file.read()
-    return code
+#Функция считывания файла 
+def file_inner(path): 
+    with codecs.open(path, 'r', 'utf-8') as file: 
+        code = file.read() 
+    return code 
+ 
+ 
+#Удаление комментариев в коде, whitespace, приведение к одной строке 
+def cleaner1(code): 
+    ## Remove code comments 
+    pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)') 
+    code = re.sub(pat,'',code) 
+    code = re.sub('\r','',code) 
+    code = re.sub('\t','',code) 
+    code = code.split('\n') 
+    code = [line.strip() for line in code if line.strip()] 
+    code = ' '.join(code) 
+    return(code) 
+ 
+ 
+def subnodes_by_type(node, node_type_pattern = ''): 
+    if re.match(pattern=node_type_pattern, string=node.type, flags=0): 
+        return [node] 
+    nodes = [] 
+    for child in node.children: 
+        nodes.extend(subnodes_by_type(child, node_type_pattern = 'method_declaration')) 
+    return nodes 
+ 
 
-#Функция выделения метода из файла
-def parsing(code):
-    snippets = []
-    #Строим дерево по нашему файлу
-    tree = parser.parse(bytes(code, "utf8"))
-    #Прыгаем по дереву
-    root_node = tree.root_node
-    #print(root_node.children)
-    for node in root_node.children:
-        if node.type == "namespace_declaration":
-            for node in node.children:
-                if node.type == 'declaration_list':
-                    for node in node.children:
-                        if node.type == 'class_declaration':
-                            for node in node.children:
-                                if node.type == 'declaration_list':
-                                    for node in node.children:
-                                        if node.type == 'method_declaration':
-                                            snippets.append(code[node.start_byte: node.end_byte])
-    return snippets
+def add_line_delimiter(method): 
+    method = method.replace(';', ';\n') 
+    method = method.replace('{', '\n{\n') 
+    method = method.replace('}', '}\n') 
+    return method
+
+
+def obfuscate(parser, code, node_type_pattern='method_declaration'): 
+    tree = parser.parse(bytes(code, 'utf8')) 
+    nodes = subnodes_by_type(tree.root_node, node_type_pattern) 
+    methods = [] 
+    for node in nodes: 
+        if node.start_byte >= node.end_byte: 
+            continue 
+        method = code[node.start_byte:node.end_byte]
+        method = add_line_delimiter(method) 
+        methods.append(method)
+    return methods
 
 
 class RobertaClassificationHead(nn.Module):
@@ -316,15 +337,15 @@ def predict(model, tokenizer, funcs, device, best_threshold = 0.5, do_linelevel_
 
 
 def find_vulnarabilities_in_file(content, model, tokenizer, device):
-    methods = parsing(file_inner(content))
+    methods = obfuscate(parser, cleaner1(file_inner(content)))
     try:
         predictions = predict(model, tokenizer, methods, device, do_linelevel_preds = True)
     except:
         predictions = {"Error": "Ошибка сканирования файла"}
-        os.remove(content)
+        #os.remove(content)
         return predictions
     else:
-        os.remove(content)
+        #os.remove(content)
         return predictions
 
 app = FastAPI()
