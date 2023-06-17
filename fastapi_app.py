@@ -20,7 +20,7 @@ CSHARP_LANGUAGE = Language('build/my-languages.so', 'c_sharp')
 parser.set_language(CSHARP_LANGUAGE)
 
 base = 'microsoft/unixcoder-base'
-model_id = "~/det_vuls_API/Model"
+model_id = "/Model"
 
 tokenizer = AutoTokenizer.from_pretrained(base)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
