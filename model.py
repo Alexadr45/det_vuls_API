@@ -17,7 +17,7 @@ import re
 
 
 base = 'microsoft/unixcoder-base'
-model_id = "/Model"
+model_id = "Model"
 
 tokenizer = AutoTokenizer.from_pretrained(base)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
