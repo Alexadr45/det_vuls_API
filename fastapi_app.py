@@ -67,7 +67,9 @@ async def create_upload_file(file: UploadFile = File(...)):
     res_preds = find_vulnarabilities_in_file(file.filename, model, tokenizer, device)
     f_name = file.filename
     os.remove(file.filename)
-    return {f_name : res_preds}
+    result = {f_name : res_preds}
+    result = json.dumps(result)
+    return result
 
 
 if __name__ == "__main__":
