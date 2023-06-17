@@ -17,7 +17,7 @@ import re
 
 
 base = 'microsoft/unixcoder-base'
-model_id = "/home/vboxuser/det_vuls_API/Model"
+model_id = "/det_vuls_API/Model"
 
 tokenizer = AutoTokenizer.from_pretrained(base)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
