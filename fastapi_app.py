@@ -1,4 +1,5 @@
 import pandas as pd
+import torch
 import os
 import tree_sitter
 from tree_sitter import Language, Parser
@@ -9,28 +10,44 @@ from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 from typing import List
 import uvicorn
-from model import predict, model, tokenizer, parser, file_inner, parsing
+from peft import PeftModel, PeftConfig
+from transformers import AutoTokenizer, AutoModel, RobertaForSequenceClassification, set_seed, RobertaConfig
+from model import predict, file_inner, cleaner1, parser, obfuscate, Model
 
 
-def find_vulnarabilities_in_file(content):
-    methods = parsing(file_inner(content))
+parser = Parser()
+CSHARP_LANGUAGE = Language('build/my-languages.so', 'c_sharp')
+parser.set_language(CSHARP_LANGUAGE)
+
+base = 'microsoft/unixcoder-base'
+model_id = "/home/vboxuser/det_vuls_API/Model"
+
+tokenizer = AutoTokenizer.from_pretrained(base)
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+n_gpu = torch.cuda.device_count()
+set_seed(n_gpu)
+
+config = RobertaConfig.from_pretrained(base)
+config.num_labels = 1
+model = RobertaForSequenceClassification.from_pretrained(base, config=config, ignore_mismatched_sizes=True).to(device)
+model = Model(model, config, tokenizer)
+model.to(device)
+
+config = PeftConfig.from_pretrained(model_id)
+model = PeftModel.from_pretrained(model, model_id)
+
+
+def find_vulnarabilities_in_file(content, model, tokenizer, device):
+    methods = obfuscate(parser, cleaner1(file_inner(content)))
     try:
-        result = predict(model, tokenizer, methods=methods, do_linelevel_preds = True)
+        predictions = predict(model, tokenizer, methods, device, do_linelevel_preds = True)
     except:
         predictions = {"Error": "Ошибка сканирования файла"}
-        os.remove(content)
+        #os.remove(content)
         return predictions
     else:
-        os.remove(content)
+        #os.remove(content)
         return predictions
-
-
-class Data(BaseModel):
-    content: str
-    name: str
-
-class Item(BaseModel):
-    accept: List[Data]
 
 app = FastAPI()
 
@@ -47,11 +64,11 @@ async def create_upload_file(file: UploadFile = File(...)):
         return {"message":"ERROR uploading file"}
     finally:
         file.file.close()
-    res_preds = find_vulnarabilities_in_file(model, tokenizer)
+    res_preds = find_vulnarabilities_in_file(file.filename, model, tokenizer, device)
     f_name = file.filename
     os.remove(file.filename)
     return {f_name : res_preds}
 
 
 if __name__ == "__main__":
-    uvicorn.run("fastapi_app:app", host="0.0.0.0", reload = True)
+    uvicorn.run("fastapi_app:app", host="127.0.0.1", reload = True)

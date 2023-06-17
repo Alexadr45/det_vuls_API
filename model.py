@@ -15,18 +15,6 @@ from peft import PeftModel, PeftConfig
 from tqdm import tqdm
 import re
 
-# import pandas as pd
-# import os
-# import tree_sitter
-# from tree_sitter import Language, Parser
-# import codecs
-import shutil
-import base64
-from fastapi import FastAPI, File, UploadFile
-from pydantic import BaseModel
-from typing import List
-import uvicorn
-
 
 base = 'microsoft/unixcoder-base'
 model_id = "/home/vboxuser/det_vuls_API/Model"
@@ -36,18 +24,6 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 n_gpu = torch.cuda.device_count()
 set_seed(n_gpu)
 
-
-#Настраиваем пул наших языков
-Language.build_library(
-  # Store the library in the `build` directory
-  'build/my-languages.so',
-
-  # Include one or more languages
-  [
- #   'tree-sitter-python',
-    'tree-sitter-c-sharp'
-  ]
-)
 
 #Настраиваем парсер для C#
 parser = Parser()
@@ -334,40 +310,3 @@ def predict(model, tokenizer, funcs, device, best_threshold = 0.5, do_linelevel_
     else:
         result = {'methods': orig_funcs, 'vulnerable': y_preds}
         return result
-
-
-def find_vulnarabilities_in_file(content, model, tokenizer, device):
-    methods = obfuscate(parser, cleaner1(file_inner(content)))
-    try:
-        predictions = predict(model, tokenizer, methods, device, do_linelevel_preds = True)
-    except:
-        predictions = {"Error": "Ошибка сканирования файла"}
-        #os.remove(content)
-        return predictions
-    else:
-        #os.remove(content)
-        return predictions
-
-app = FastAPI()
-
-@app.get("/")
-async def hello():
-    return {"message": "Hello world"}
-
-@app.post("/uploadfile")
-async def create_upload_file(file: UploadFile = File(...)):
-    try:
-        with open(file.filename, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-    except Exception:
-        return {"message":"ERROR uploading file"}
-    finally:
-        file.file.close()
-    res_preds = find_vulnarabilities_in_file(file.filename, model, tokenizer, device)
-    f_name = file.filename
-    os.remove(file.filename)
-    return {f_name : res_preds}
-
-
-if __name__ == "__main__":
-    uvicorn.run("model:app", host="127.0.0.1", reload = True)
