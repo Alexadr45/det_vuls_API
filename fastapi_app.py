@@ -70,7 +70,7 @@ async def create_upload_file(file: UploadFile = File(...)):
     os.remove(file.filename)
     result = {f_name : res_preds}
     result = json.dumps(result)
-    return result
+    return result.json()
 
 
 if __name__ == "__main__":
