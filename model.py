@@ -47,13 +47,13 @@ def cleaner1(code):
     return code
 
 
-def subnodes_by_type(node, node_type_pattern=''): 
+def subnodes_by_type(node, node_type_pattern=''):
     """Выделение сабнодов с методами в дереве tree-sitter"""
-    if re.match(pattern=node_type_pattern, string=node.type, flags=0): 
-        return [node] 
-    nodes = [] 
-    for child in node.children: 
-        nodes.extend(subnodes_by_type(child, node_type_pattern = 'method_declaration')) 
+    if re.match(pattern=node_type_pattern, string=node.type, flags=0):
+        return [node]
+    nodes = []
+    for child in node.children:
+        nodes.extend(subnodes_by_type(child, node_type_pattern = 'method_declaration'))
     return nodes 
 
 
