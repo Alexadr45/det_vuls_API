@@ -15,11 +15,12 @@ def print_predict(file):
                 for i, method in enumerate(data[filename].keys()):
                     f.writelines([f"Метод {i+1}:\n",
                                   "Уязвимые строки:\n",
-                                  '\n'.join(map(str, data[filename] \
-                                                [method]['vul_lines'])),
+                                  '\n'.join \
+                                  (map(str,
+                                       data[filename][method]['vul_lines'])),
                                   "\n", 'Код:\n',
-                                  ''.join(data[filename] \
-                                          [method]['orig_func'])])
+                                  ''.join \
+                                  (data[filename][method]['orig_func'])])
 
 
 print_predict(sys.argv[1])
