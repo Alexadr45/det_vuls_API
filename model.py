@@ -318,7 +318,7 @@ def predict(model, tokenizer, funcs,
     methods = {}
     for idx, batch in enumerate(check_dataloader, start=1):
         method = {}
-        inputs_ids =  batch[0].to(device)
+        inputs_ids = batch[0].to(device)
         func = batch[1]
         with torch.no_grad():
             # attentions: a tuple with of one Tensor with 4D shape:
