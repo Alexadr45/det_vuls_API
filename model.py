@@ -252,12 +252,17 @@ def get_all_lines_score(word_att_scores: list):
     return all_lines_score
 
 
+def lines_with_vul(func, vul_lines):
+    func = func.split('\n')
+    return func[vul_lines]
+
+
 def find_vul_lines(tokenizer, inputs_ids, attentions):
     ids = inputs_ids[0].detach().tolist()
     all_tokens = tokenizer.convert_ids_to_tokens(ids)
     all_tokens = [token.replace("Ġ", "") for token in all_tokens]
     all_tokens = [token.replace("ĉ", "Ċ") for token in all_tokens]
-    original_lines = ''.join(all_tokens).split("Ċ")
+    #original_lines = ''.join(all_tokens).split("Ċ")
 
     # take from tuple then take out mini-batch attention values
     attentions = attentions[0][0]
@@ -290,7 +295,7 @@ def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_pr
     model.eval()
     methods = {}
     for idx, batch in enumerate(check_dataloader, start=1):
-        method = []
+        method = {}
         inputs_ids =  batch[0].to(device)
         func = batch[1]
         with torch.no_grad():
@@ -299,13 +304,13 @@ def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_pr
             pred = logit.cpu().numpy()[0][1] > best_threshold
             if pred:
                 vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
-                method.append({'orig_func': func})
-                method.append({'predict': 1})
-                method.append({'vul_lines': vul_lines[:10]})
+                vul_lines2 = lines_with_vul(func[0], vul_lines[0])
+                method['orig_func'] = func
+                method['vul_lines'] = vul_lines2
             else:
                 vul_lines = None
-                # method.append({'orig_func': func})
-                # method.append({'predict': 0})
             methods[('method ' + str(idx))] = method
-
-    return methods
+    if methods == {}:
+        return 'Уязвимости не найдены'
+    else:
+        return methods
