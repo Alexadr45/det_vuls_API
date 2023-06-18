@@ -1,18 +1,12 @@
-import pandas as pd
 import torch
 import os
 import json
-import tree_sitter
 from tree_sitter import Language, Parser
-import codecs
 import shutil
-import base64
 from fastapi import FastAPI, File, UploadFile
-from pydantic import BaseModel
-from typing import List
 import uvicorn
 from peft import PeftModel, PeftConfig
-from transformers import AutoTokenizer, AutoModel, RobertaForSequenceClassification, set_seed, RobertaConfig
+from transformers import AutoTokenizer, RobertaForSequenceClassification, set_seed, RobertaConfig
 from model import predict, file_inner, cleaner1, parser, obfuscate, Model
 
 
