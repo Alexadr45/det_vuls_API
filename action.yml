@@ -42,12 +42,12 @@ runs:
     # send request
     - id: send_request
       run:
-         curl -F "file=@${{ steps.changed-files.outputs.all_changed_files }}" 158.160.32.83:8000/uploadfile >> ${{ github.action_path }}/otchet.txt
+         curl -F "file=@${{ steps.changed-files.outputs.all_changed_files }}" 158.160.32.83:8000/uploadfile >> ${{ github.action_path }}/otchet.json
       shell: bash
       
     - id: parse_output
       run:
-         python3 ${{ github.action_path }}/parse_answer.py ${{ github.action_path }}/otchet.txt
+         python3 ${{ github.action_path }}/parse_answer.py ${{ github.action_path }}/otchet.json
       shell: bash
          
     - id: list-found-secrets
