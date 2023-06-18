@@ -48,12 +48,16 @@ runs:
          http://$IP_ADDR:8000/uploadfile >> ${{ github.action_path }}/otchet.txt
       shell: bash
       
-      
+    - id: parse_output
+      run:
+         python3 ${{ github.action_path }}/parse_answer.py ${{ github.action_path }}/otchet.txt
+      shell: bash
+         
     - id: list-found-secrets
       run: |
-         cat ${{ github.action_path }}/otchet.txt
+         cat ${{ github.action_path }}/predict.txt
          echo "found-secrets<<EOF" >> $GITHUB_ENV
-         echo -e $(cat ${{ github.action_path }}/otchet.txt) >> $GITHUB_ENV
+         echo -e $(cat ${{ github.action_path }}/predict.txt) >> $GITHUB_ENV
          echo 'EOF' >> $GITHUB_ENV
       shell: bash
       
@@ -64,8 +68,8 @@ runs:
 #      shell: bash
       
     - name: if there any secrets
-      run:  if grep -v 'Пароли не найдены' \
-      ${{ github.action_path }}/otchet.txt; then exit 1; fi
+      run:  if grep -v 'Уязвимости не найдены' \
+      ${{ github.action_path }}/predict.txt; then exit 1; fi
       shell: bash     
 
 # $mail->SMTPSecure='ssl';
