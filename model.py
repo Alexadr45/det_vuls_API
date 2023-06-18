@@ -269,7 +269,7 @@ def find_vul_lines(tokenizer, inputs_ids, attentions):
     all_tokens = tokenizer.convert_ids_to_tokens(ids)
     all_tokens = [token.replace("Ġ", "") for token in all_tokens]
     all_tokens = [token.replace("ĉ", "Ċ") for token in all_tokens]
-    original_lines = ''.join(all_tokens).split("Ċ")
+    # original_lines = ''.join(all_tokens).split("Ċ")
 
     # take from tuple then take out mini-batch attention values
     attentions = attentions[0][0]
@@ -285,15 +285,18 @@ def find_vul_lines(tokenizer, inputs_ids, attentions):
             attention += layer_attention
     # clean att score for <s> and </s>
     attention = clean_special_token_values(attention, padding=True)
-    # attention should be 1D tensor with seq length representing each token's attention value
-    word_att_scores = get_word_att_scores(all_tokens=all_tokens, att_scores=attention)
+    # attention should be 1D tensor with seq length 
+    # representing each token's attention value
+    word_att_scores = get_word_att_scores(all_tokens=all_tokens,
+                                          att_scores=attention)
     all_lines_score = get_all_lines_score(word_att_scores)
-    all_lines_score_with_label = sorted(range(len(all_lines_score)), key=lambda i: all_lines_score[i], reverse=True)
+    all_lines_score_with_label = sorted(range(len(all_lines_score)),
+                                        key=lambda i: all_lines_score[i],
+                                        reverse=True)
     return all_lines_score_with_label
 
 
 def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_preds=True):
-
     check_dataset = TextData(tokenizer, funcs)
     check_sampler = SequentialSampler(check_dataset)
     check_dataloader = DataLoader(check_dataset, sampler=check_sampler, batch_size=1, num_workers=0)
