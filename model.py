@@ -157,7 +157,7 @@ class Input(object):
                  func):
         self.input_tokens = input_tokens
         self.input_ids = input_ids
-        self.func=func
+        self.func = func
 
 
 class TextData(Dataset):
@@ -166,11 +166,9 @@ class TextData(Dataset):
         for i in tqdm(range(len(funcs))):
             self.examples.append(tokenize_samples(funcs[i], tokenizer))
 
-            
     def __len__(self):
         return len(self.examples)
 
-    
     def __getitem__(self, i):
         return torch.tensor(self.examples[i].input_ids), str(self.examples[i].func)
 
