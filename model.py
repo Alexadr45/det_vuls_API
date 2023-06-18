@@ -53,7 +53,7 @@ def subnodes_by_type(node, node_type_pattern=''):
         return [node]
     nodes = []
     for child in node.children:
-        nodes.extend(subnodes_by_type(child, \
+        nodes.extend(subnodes_by_type(child,
                                       node_type_pattern='method_declaration'))
     return nodes
 
@@ -104,14 +104,16 @@ class Model(RobertaForSequenceClassification):
         self.encoder = encoder
         self.tokenizer = tokenizer
         self.classifier = RobertaClassificationHead(config)
-    
-    
-    def forward(self, attention_mask = None, inputs_embeds = None, output_hidden_states = None, return_dict = True, input_embed=None, labels=None, output_attentions=False, input_ids=None):
+
+
+    def forward(self, attention_mask=None, inputs_embeds=None, output_hidden_states=None, return_dict=True, input_embed=None, labels=None, output_attentions=False, input_ids=None):
         if output_attentions:
             if input_ids is not None:
-                outputs = self.encoder.roberta(input_ids, attention_mask=input_ids.ne(1), output_attentions=output_attentions) # attention_mask=input_ids.ne(1)
+                outputs = self.encoder.roberta(input_ids, attention_mask=input_ids.ne(1), 
+                                               output_attentions=output_attentions)  # attention_mask=input_ids.ne(1)
             else:
-                outputs = self.encoder.roberta(inputs_embeds=input_embed, output_attentions=output_attentions)
+                outputs = self.encoder.roberta(inputs_embeds=input_embed,
+                                               output_attentions=output_attentions)
             attentions = outputs.attentions
             last_hidden_state = outputs.last_hidden_state
             logits = self.classifier(last_hidden_state)
@@ -124,9 +126,11 @@ class Model(RobertaForSequenceClassification):
                 return prob, attentions
         else:
             if input_ids is not None:
-                outputs = self.encoder.roberta(input_ids, attention_mask=input_ids.ne(1), output_attentions=output_attentions)[0] # attention_mask=input_ids.ne(1)
+                outputs = self.encoder.roberta(input_ids, attention_mask=input_ids.ne(1),
+                                               output_attentions=output_attentions)[0]  # attention_mask=input_ids.ne(1)
             else:
-                outputs = self.encoder.roberta(inputs_embeds=input_embed, output_attentions=output_attentions)[0]
+                outputs = self.encoder.roberta(inputs_embeds=input_embed,
+                                               output_attentions=output_attentions)[0]
             logits = self.classifier(outputs)
             prob = torch.softmax(logits, dim=-1)
             if labels is not None:
@@ -135,8 +139,8 @@ class Model(RobertaForSequenceClassification):
                 return loss, prob
             else:
                 return prob
-            
-            
+
+
 class Input(object):
     """A single training/test features for a example."""
     def __init__(self,
