@@ -6,5 +6,5 @@ jobs:
     steps:
       # Переключение на текущую ветку
       - uses: actions/checkout@v2
-      # Вызов Super Linter
-      - uses: docker://github/super-linter:v2.1.0
+      # Вызов Super Linter из GitHub Actions
+      - uses: super-linter/super-linter@v5.0.0
