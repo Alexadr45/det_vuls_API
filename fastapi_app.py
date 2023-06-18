@@ -7,7 +7,7 @@ from fastapi import FastAPI, File, UploadFile
 import uvicorn
 from peft import PeftModel, PeftConfig
 from transformers import AutoTokenizer, RobertaForSequenceClassification, \
-                          set_seed, RobertaConfig
+                  set_seed, RobertaConfig
 from model import predict, file_inner, cleaner1, parser, obfuscate, Model
 
 
