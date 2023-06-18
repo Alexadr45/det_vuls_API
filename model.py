@@ -1,10 +1,8 @@
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
-from transformers import RobertaForSequenceClassification, AutoTokenizer, set_seed
+from transformers import RobertaForSequenceClassification, \
+    AutoTokenizer, set_seed
 from torch.utils.data import Dataset, SequentialSampler, DataLoader
-import pandas as pd
-import os
-import tree_sitter
 from tree_sitter import Language, Parser
 import codecs
 import torch
@@ -24,17 +22,16 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 n_gpu = torch.cuda.device_count()
 set_seed(n_gpu)
 
-#Настраиваем парсер для C#
+# Настраиваем парсер для C#
 parser = Parser()
 CSHARP_LANGUAGE = Language('build/my-languages.so', 'c_sharp')
 parser.set_language(CSHARP_LANGUAGE)
 
-
-#Функция считывания файла 
-def file_inner(path): 
-    with codecs.open(path, 'r', 'utf-8') as file: 
-        code = file.read() 
-    return code 
+# Функция считывания файла
+def file_inner(path):
+    with codecs.open(path, 'r', 'utf-8') as file:
+        code = file.read()
+    return code
  
 
 def cleaner1(code): 
@@ -171,7 +168,7 @@ model = RobertaForSequenceClassification.from_pretrained(base, config=config, ig
 model = Model(model, config, tokenizer)
 model.to(device)
 
-#model.load_state_dict(torch.load(pretrain_model_path, map_location=device))
+# model.load_state_dict(torch.load(pretrain_model_path, map_location=device))
 config = PeftConfig.from_pretrained(model_id)
 model = PeftModel.from_pretrained(model, model_id)
 
@@ -301,13 +298,13 @@ def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_pr
             if pred:
                 vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
                 y_preds.append(1)
-                #all_vul_lines.append(vul_lines[:10])
+                # all_vul_lines.append(vul_lines[:10])
             else:
                 vul_lines = None
                 y_preds.append(0)
                 
             all_vul_lines.append(vul_lines[:10])
-            #y_preds.append(pred)
+            # y_preds.append(pred)
             orig_funcs.append(func)
     if do_linelevel_preds:
         result = {'methods': orig_funcs, 'vulnerable': y_preds, 'vul_lines': all_vul_lines}
