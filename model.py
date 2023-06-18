@@ -250,7 +250,7 @@ def get_all_lines_score(word_att_scores: list):
     line = ""
     for i in range(len(word_att_scores)):
         # summerize if meet line separator or the last token
-        if ((word_att_scores[i][0] in separator) or (i == (len(word_att_scores) - 1)))
+        if ((word_att_scores[i][0] in separator) or (i == (len(word_att_scores) - 1))) \
         and score_sum != 0:
             score_sum += word_att_scores[i][1]
             all_lines_score.append(score_sum)
