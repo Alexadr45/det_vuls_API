@@ -250,8 +250,9 @@ def get_all_lines_score(word_att_scores: list):
     line = ""
     for i in range(len(word_att_scores)):
         # summerize if meet line separator or the last token
-        if ((word_att_scores[i][0] in separator) or
-                (i == (len(word_att_scores) - 1))) and score_sum != 0:
+        if ((word_att_scores[i][0] in separator)
+            or (i == (len(word_att_scores) - 1))) 
+        and score_sum != 0:
             score_sum += word_att_scores[i][1]
             all_lines_score.append(score_sum)
             line = ""
@@ -315,7 +316,7 @@ def predict(model, tokenizer, funcs,
         inputs_ids = batch[0].to(device)
         func = batch[1]
         with torch.no_grad():
-            # attentions: a tuple with of one Tensor with 4D shape: 
+            # attentions: a tuple with of one Tensor with 4D shape:
             # (batch_size, num_heads, sequence_length, sequence_length)
             logit, attentions = model(input_ids=inputs_ids,
                                       output_attentions=True)
