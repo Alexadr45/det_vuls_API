@@ -239,27 +239,27 @@ def get_word_att_scores(all_tokens: list, att_scores: list) -> list:
     return word_att_scores
 
 
-def get_all_lines_score(word_scores: list):
+def get_all_lines_score(ws: list):
     # verified_flaw_lines = [''.join(l) for l in verified_flaw_lines]
-    # word_scores -> [[token, att_value], [token, att_value], ...]
-    separator = ["Ċ", " Ċ", "ĊĊ", " ĊĊ"]
+    # ws -> [[token, att_value], [token, att_value], ...]
+    separ = ["Ċ", " Ċ", "ĊĊ", " ĊĊ"]
     # to return
     all_lines_score = []
     score_sum = 0
     line_idx = 0
     line = ""
-    for i in range(len(word_scores)):
-        # summerize if meet line separator or the last token
-        if ((word_scores[i][0] in separator) or (i == (len(word_scores) - 1)) and score_sum != 0):
-            score_sum += word_scores[i][1]
+    for i in range(len(ws)):
+        # summerize if meet line separ or the last token
+        if (ws[i][0] in separ) or (i == (len(ws) - 1)) and score_sum != 0:
+            score_sum += ws[i][1]
             all_lines_score.append(score_sum)
             line = ""
             score_sum = 0
             line_idx += 1
         # else accumulate score
-        elif word_scores[i][0] not in separator:
-            line += word_scores[i][0]
-            score_sum += word_scores[i][1]
+        elif ws[i][0] not in separ:
+            line += ws[i][0]
+            score_sum += ws[i][1]
     return all_lines_score
 
 
