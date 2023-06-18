@@ -285,7 +285,7 @@ def find_vul_lines(tokenizer, inputs_ids, attentions):
             attention += layer_attention
     # clean att score for <s> and </s>
     attention = clean_special_token_values(attention, padding=True)
-    # attention should be 1D tensor with seq length 
+    # attention should be 1D tensor with seq length
     # representing each token's attention value
     word_att_scores = get_word_att_scores(all_tokens=all_tokens,
                                           att_scores=attention)
@@ -296,7 +296,9 @@ def find_vul_lines(tokenizer, inputs_ids, attentions):
     return all_lines_score_with_label
 
 
-def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_preds=True):
+def predict(model, tokenizer, funcs,
+            device, best_threshold=0.5,
+            do_linelevel_preds=True):
     check_dataset = TextData(tokenizer, funcs)
     check_sampler = SequentialSampler(check_dataset)
     check_dataloader = DataLoader(check_dataset, sampler=check_sampler, batch_size=1, num_workers=0)
