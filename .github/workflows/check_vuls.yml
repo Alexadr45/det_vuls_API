@@ -1,4 +1,8 @@
-on: []
+on:
+  push:
+    branches: 
+      - main
+
 
 env:
   main-content: ''
