@@ -1,3 +1,4 @@
+---
 name: 'Vuldet'
 description: 'Greet someone'
 
@@ -25,8 +26,9 @@ runs:
         files_ignore_separator: " "
       
     - name: Write File
-      run: cd ${{ github.action_path }} && echo ${{ steps.changed-files.outputs.all_changed_files }} \
-      > ${{ github.action_path }}/pathes.txt && cat pathes.txt
+      run: cd ${{ github.action_path }} && \
+      echo ${{ steps.changed-files.outputs.all_changed_files }} > \
+      ${{ github.action_path }}/pathes.txt && cat pathes.txt
       shell: bash
   
     # получение ip-адреса
@@ -34,7 +36,8 @@ runs:
  #     run: |
  #       cd ${{ github.action_path }} && wget -o wget.txt detsec.ddns.net
  #       cd ${{ github.action_path }} && cat wget.txt
- #       cd ${{ github.action_path }} && echo "IP_ADDR=$(grep "Location" wget.txt | \
+ #       cd ${{ github.action_path }} && \
+ #       echo "IP_ADDR=$(grep "Location" wget.txt | \
  #          awk -F/ '{print $3}' | awk -F: '{print $1}')" >> $GITHUB_ENV
  #     shell: bash
 
