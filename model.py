@@ -170,7 +170,8 @@ class TextData(Dataset):
         return len(self.examples)
 
     def __getitem__(self, i):
-        return torch.tensor(self.examples[i].input_ids), str(self.examples[i].func)
+        return torch.tensor(self.examples[i].input_ids), \
+            str(self.examples[i].func)
 
 
 config = RobertaConfig.from_pretrained(base)
