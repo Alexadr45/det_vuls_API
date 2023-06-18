@@ -24,11 +24,11 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 n_gpu = torch.cuda.device_count()
 set_seed(n_gpu)
 
-
 #Настраиваем парсер для C#
 parser = Parser()
 CSHARP_LANGUAGE = Language('build/my-languages.so', 'c_sharp')
 parser.set_language(CSHARP_LANGUAGE)
+
 
 #Функция считывания файла 
 def file_inner(path): 
@@ -36,10 +36,9 @@ def file_inner(path):
         code = file.read() 
     return code 
  
- 
-#Удаление комментариев в коде, whitespace, приведение к одной строке 
+
 def cleaner1(code): 
-    ## Remove code comments 
+    """Удаление комментариев в коде, whitespace, приведение к одной строке"""
     pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)') 
     code = re.sub(pat,'',code) 
     code = re.sub('\r','',code) 
@@ -47,19 +46,21 @@ def cleaner1(code):
     code = code.split('\n') 
     code = [line.strip() for line in code if line.strip()] 
     code = ' '.join(code) 
-    return(code) 
- 
- 
-def subnodes_by_type(node, node_type_pattern = ''): 
+    return(code)
+
+
+def subnodes_by_type(node, node_type_pattern=''): 
+    """Выделение сабнодов с методами в дереве tree-sitter"""
     if re.match(pattern=node_type_pattern, string=node.type, flags=0): 
         return [node] 
     nodes = [] 
     for child in node.children: 
         nodes.extend(subnodes_by_type(child, node_type_pattern = 'method_declaration')) 
     return nodes 
- 
+
 
 def add_line_delimiter(method): 
+    """Разделения кода по строкам"""
     method = method.replace(';', ';\n') 
     method = method.replace('{', '\n{\n') 
     method = method.replace('}', '}\n') 
@@ -67,6 +68,7 @@ def add_line_delimiter(method):
 
 
 def obfuscate(parser, code, node_type_pattern='method_declaration'): 
+    """Выделение методов(функций) из кода"""
     tree = parser.parse(bytes(code, 'utf8')) 
     nodes = subnodes_by_type(tree.root_node, node_type_pattern) 
     methods = [] 
@@ -87,6 +89,7 @@ class RobertaClassificationHead(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.out_proj = nn.Linear(config.hidden_size, 2)
 
+        
     def forward(self, features, **kwargs):
         x = features[:, 0, :]  # take <s> token (equiv. to [CLS])
         x = self.dropout(x)
@@ -95,7 +98,8 @@ class RobertaClassificationHead(nn.Module):
         x = self.dropout(x)
         x = self.out_proj(x)
         return x
-        
+
+
 class Model(RobertaForSequenceClassification):   
     def __init__(self, encoder, config, tokenizer):
         super(Model, self).__init__(config=config)
@@ -103,7 +107,7 @@ class Model(RobertaForSequenceClassification):
         self.tokenizer = tokenizer
         self.classifier = RobertaClassificationHead(config)
     
-        
+    
     def forward(self, attention_mask = None, inputs_embeds = None, output_hidden_states = None, return_dict = True, input_embed=None, labels=None, output_attentions=False, input_ids=None):
         if output_attentions:
             if input_ids is not None:
@@ -152,9 +156,11 @@ class TextData(Dataset):
         for i in tqdm(range(len(funcs))):
             self.examples.append(tokenize_samples(funcs[i], tokenizer))
 
+            
     def __len__(self):
         return len(self.examples)
 
+    
     def __getitem__(self, i):
         return torch.tensor(self.examples[i].input_ids), str(self.examples[i].func)
 
@@ -182,7 +188,7 @@ def cleaner(code):
     return(code)
 
 
-def set_seed(n_gpu, seed = 42):
+def set_seed(n_gpu, seed=42):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -190,7 +196,7 @@ def set_seed(n_gpu, seed = 42):
         torch.cuda.manual_seed_all(seed)
 
 
-def tokenize_samples(func, tokenizer, block_size = 512):
+def tokenize_samples(func, tokenizer, block_size=512):
     clean_func = cleaner(func)
     code_tokens = tokenizer.tokenize(str(clean_func))[:block_size-2]
     source_tokens = [tokenizer.cls_token] + code_tokens + [tokenizer.sep_token]
@@ -274,9 +280,7 @@ def find_vul_lines(tokenizer, inputs_ids, attentions):
     return all_lines_score_with_label
 
 
-
-
-def predict(model, tokenizer, funcs, device, best_threshold = 0.5, do_linelevel_preds = True):
+def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_preds=True):
 
     check_dataset = TextData(tokenizer, funcs)
     check_sampler = SequentialSampler(check_dataset)
