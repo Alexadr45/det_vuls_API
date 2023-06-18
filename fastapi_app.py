@@ -67,11 +67,11 @@ async def create_upload_file(file: UploadFile = File(...)):
         file.file.close()
     res_preds = find_vulnarabilities_in_file(file.filename, model, tokenizer, device)
     f_name = file.filename
-    os.remove(file.filename)
-    result = {f_name : res_preds}
-    result = json.dumps(result)
+    #os.remove(file.filename)
+    result = [{f_name : res_preds}]
+    #result = json.dumps(result)
     return result
 
 
 if __name__ == "__main__":
-    uvicorn.run("fastapi_app:app", host="0.0.0.0", reload = False)
+    uvicorn.run("fastapi_app:app", host="127.0.0.1", reload = False)
