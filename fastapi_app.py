@@ -65,16 +65,19 @@ async def create_upload_file(file: UploadFile = File(...)):
         with open(file.filename, "wb") as f:
             shutil.copyfileobj(file.file, f)
     except Exception:
-        return {"message":"ERROR uploading file"}
+        return {"message": "ERROR uploading file"}
     finally:
         file.file.close()
-    res_preds = find_vulnarabilities_in_file(file.filename, model, tokenizer, device)
+    res_preds = find_vulnarabilities_in_file(file.filename, 
+                                             model, 
+                                             tokenizer, 
+                                             device)
     f_name = file.filename
     os.remove(file.filename)
-    result = {f_name : res_preds}
+    result = {f_name: res_preds}
     result = json.dumps(result)
     return result
 
 
 if __name__ == "__main__":
-    uvicorn.run("fastapi_app:app", host="0.0.0.0", reload = False)
+    uvicorn.run("fastapi_app:app", host="0.0.0.0", reload=False)
