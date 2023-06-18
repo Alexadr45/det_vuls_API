@@ -27,23 +27,24 @@ parser = Parser()
 CSHARP_LANGUAGE = Language('build/my-languages.so', 'c_sharp')
 parser.set_language(CSHARP_LANGUAGE)
 
+
 # Функция считывания файла
 def file_inner(path):
     with codecs.open(path, 'r', 'utf-8') as file:
         code = file.read()
     return code
- 
 
-def cleaner1(code): 
+
+def cleaner1(code):
     """Удаление комментариев в коде, whitespace, приведение к одной строке"""
-    pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)') 
-    code = re.sub(pat,'',code) 
-    code = re.sub('\r','',code) 
-    code = re.sub('\t','',code) 
-    code = code.split('\n') 
-    code = [line.strip() for line in code if line.strip()] 
-    code = ' '.join(code) 
-    return(code)
+    pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)')
+    code = re.sub(pat, '', code)
+    code = re.sub('\r', '', code)
+    code = re.sub('\t', '', code)
+    code = code.split('\n')
+    code = [line.strip() for line in code if line.strip()]
+    code = ' '.join(code)
+    return code
 
 
 def subnodes_by_type(node, node_type_pattern=''): 
