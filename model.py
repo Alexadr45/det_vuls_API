@@ -113,8 +113,7 @@ class Model(RobertaForSequenceClassification):
             if input_ids is not None:
                 outputs = self.encoder.roberta(input_ids,
                                                attention_mask=input_ids.ne(1),
-                                               output_attentions=\
-                                               output_attentions)
+                                               output_attentions=output_attentions)
             else:
                 outputs = self.encoder.roberta(inputs_embeds=input_embed,
                                                output_attentions=output_attentions)
