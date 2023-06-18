@@ -131,11 +131,14 @@ class Model(RobertaForSequenceClassification):
                 return prob, attentions
         else:
             if input_ids is not None:
-                outputs = self.encoder.roberta(input_ids, attention_mask=input_ids.ne(1),
-                                               output_attentions=output_attentions)[0]  # attention_mask=input_ids.ne(1)
+                outputs = self.encoder \
+                    .roberta(input_ids,
+                             attention_mask=input_ids.ne(1),
+                             output_attentions=output_attentions)[0]
             else:
-                outputs = self.encoder.roberta(inputs_embeds=input_embed,
-                                               output_attentions=output_attentions)[0]
+                outputs = self.encoder \
+                    .roberta(inputs_embeds=input_embed,
+                             output_attentions=output_attentions)[0]
             logits = self.classifier(outputs)
             prob = torch.softmax(logits, dim=-1)
             if labels is not None:
