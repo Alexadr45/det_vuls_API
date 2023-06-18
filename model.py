@@ -301,7 +301,10 @@ def predict(model, tokenizer, funcs,
             do_linelevel_preds=True):
     check_dataset = TextData(tokenizer, funcs)
     check_sampler = SequentialSampler(check_dataset)
-    check_dataloader = DataLoader(check_dataset, sampler=check_sampler, batch_size=1, num_workers=0)
+    check_dataloader = DataLoader(check_dataset,
+                                  sampler=check_sampler,
+                                  batch_size=1,
+                                  num_workers=0)
 
     model.to(device)
     y_preds = []
@@ -309,11 +312,13 @@ def predict(model, tokenizer, funcs,
     orig_funcs = []
     model.eval()
     for batch in check_dataloader:
-        inputs_ids =  batch[0].to(device)
+        inputs_ids = batch[0].to(device)
         func = batch[1]
         with torch.no_grad():
-            # attentions: a tuple with of one Tensor with 4D shape (batch_size, num_heads, sequence_length, sequence_length)
-            logit, attentions = model(input_ids=inputs_ids, output_attentions=True)
+            # attentions: a tuple with of one Tensor with 4D shape: 
+            # (batch_size, num_heads, sequence_length, sequence_length)
+            logit, attentions = model(input_ids=inputs_ids,
+                                      output_attentions=True)
             pred = logit.cpu().numpy()[0][1] > best_threshold
             if pred:
                 vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
@@ -326,7 +331,9 @@ def predict(model, tokenizer, funcs,
             # y_preds.append(pred)
             orig_funcs.append(func)
     if do_linelevel_preds:
-        result = {'methods': orig_funcs, 'vulnerable': y_preds, 'vul_lines': all_vul_lines}
+        result = {'methods': orig_funcs,
+                  'vulnerable': y_preds,
+                  'vul_lines': all_vul_lines}
         return result
     else:
         result = {'methods': orig_funcs, 'vulnerable': y_preds}
