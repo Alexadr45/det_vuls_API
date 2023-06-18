@@ -287,11 +287,10 @@ def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_pr
     check_dataloader = DataLoader(check_dataset, sampler=check_sampler, batch_size=1, num_workers=0)
 
     model.to(device)
-    y_preds = []
-    all_vul_lines = []
-    orig_funcs = []
     model.eval()
-    for batch in check_dataloader:
+    methods = {}
+    for idx, batch in enumerate(check_dataloader, start=1):
+        method = []
         inputs_ids =  batch[0].to(device)
         func = batch[1]
         with torch.no_grad():
@@ -300,18 +299,13 @@ def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_pr
             pred = logit.cpu().numpy()[0][1] > best_threshold
             if pred:
                 vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
-                y_preds.append(1)
-                #all_vul_lines.append(vul_lines[:10])
+                method.append({'orig_func': func})
+                method.append({'predict': 1})
+                method.append({'vul_lines': vul_lines[:10]})
             else:
                 vul_lines = None
-                y_preds.append(0)
-                
-            all_vul_lines.append(vul_lines[:10])
-            #y_preds.append(pred)
-            orig_funcs.append(func)
-    if do_linelevel_preds:
-        result = {'methods': orig_funcs, 'vulnerable': y_preds, 'vul_lines': all_vul_lines}
-        return result
-    else:
-        result = {'methods': orig_funcs, 'vulnerable': y_preds}
-        return result
+                # method.append({'orig_func': func})
+                # method.append({'predict': 0})
+            methods[('method ' + str(idx))] = method
+
+    return methods
