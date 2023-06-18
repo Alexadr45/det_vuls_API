@@ -66,8 +66,7 @@ runs:
 #      shell: bash
       
     - name: if there any secrets
-      run:  if grep -v 'Уязвимости не найдены' \
-      ${{ github.action_path }}/predict.txt; then exit 1; fi
+      run:  if grep -v 'Уязвимости не найдены' ${{ github.action_path }}/predict.txt; then exit 1; fi
       shell: bash     
 
 # $mail->SMTPSecure='ssl';
