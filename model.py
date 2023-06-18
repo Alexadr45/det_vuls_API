@@ -239,15 +239,16 @@ def get_word_att_scores(all_tokens: list, att_scores: list) -> list:
     return word_att_scores
 
 
-def get_all_lines_score(ws: list):
+def get_all_lines_score(word_att_scores: list):
     # verified_flaw_lines = [''.join(l) for l in verified_flaw_lines]
-    # ws -> [[token, att_value], [token, att_value], ...]
+    # word_att_scores -> [[token, att_value], [token, att_value], ...]
     separ = ["Ċ", " Ċ", "ĊĊ", " ĊĊ"]
     # to return
     all_lines_score = []
     score_sum = 0
     line_idx = 0
     line = ""
+    ws = word_att_scores
     for i in range(len(ws)):
         # summerize if meet line separ or the last token
         if (ws[i][0] in separ) or (i == (len(ws) - 1)) and score_sum != 0:
