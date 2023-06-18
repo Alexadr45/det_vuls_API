@@ -50,11 +50,14 @@ def find_vulnarabilities_in_file(content, model, tokenizer, device):
         # os.remove(content)
         return predictions
 
+
 app = FastAPI()
+
 
 @app.get("/")
 async def hello():
     return {"message": "Hello world"}
+
 
 @app.post("/uploadfile")
 async def create_upload_file(file: UploadFile = File(...)):
