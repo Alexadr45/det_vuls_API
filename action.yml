@@ -26,8 +26,7 @@ runs:
         files_ignore_separator: " "
       
     - name: Write File
-      run: cd ${{ github.action_path }} && \
-      echo ${{ steps.changed-files.outputs.all_changed_files }} > ${{ github.action_path }}/pathes.txt && cat pathes.txt
+      run: cd ${{ github.action_path }} && echo ${{ steps.changed-files.outputs.all_changed_files }} > ${{ github.action_path }}/pathes.txt && cat pathes.txt
       shell: bash
   
     # получение ip-адреса
