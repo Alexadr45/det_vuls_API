@@ -317,7 +317,6 @@ def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_pr
             else:
                 vul_lines = None
                 y_preds.append(0)
-                
             all_vul_lines.append(vul_lines[:10])
             # y_preds.append(pred)
             orig_funcs.append(func)
