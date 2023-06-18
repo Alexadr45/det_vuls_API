@@ -26,9 +26,9 @@ set_seed(n_gpu)
 config = RobertaConfig.from_pretrained(base)
 config.num_labels = 1
 model = RobertaForSequenceClassification\
-        .from_pretrained(base,
-                         config=config,
-                         ignore_mismatched_sizes=True).to(device)
+    .from_pretrained(base,
+                     config=config,
+                     ignore_mismatched_sizes=True).to(device)
 
 model = Model(model, config, tokenizer)
 model.to(device)
