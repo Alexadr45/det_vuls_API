@@ -264,13 +264,20 @@ def get_all_lines_score(word_att_scores: list):
     return all_lines_score
 
 
+def lines_with_vul(func, vul_lines):
+    func = func.split('\n')
+    lines_with_vul = []
+    for number in vul_lines:
+        lines_with_vul.append(func[number])
+    return lines_with_vul
+
+
 def find_vul_lines(tokenizer, inputs_ids, attentions):
     ids = inputs_ids[0].detach().tolist()
     all_tokens = tokenizer.convert_ids_to_tokens(ids)
     all_tokens = [token.replace("Ġ", "") for token in all_tokens]
     all_tokens = [token.replace("ĉ", "Ċ") for token in all_tokens]
     # original_lines = ''.join(all_tokens).split("Ċ")
-
     # take from tuple then take out mini-batch attention values
     attentions = attentions[0][0]
     attention = None
@@ -307,12 +314,11 @@ def predict(model, tokenizer, funcs,
                                   num_workers=0)
 
     model.to(device)
-    y_preds = []
-    all_vul_lines = []
-    orig_funcs = []
     model.eval()
-    for batch in check_dataloader:
-        inputs_ids = batch[0].to(device)
+    methods = {}
+    for idx, batch in enumerate(check_dataloader, start=1):
+        method = {}
+        inputs_ids =  batch[0].to(device)
         func = batch[1]
         with torch.no_grad():
             # attentions: a tuple with of one Tensor with 4D shape:
@@ -322,19 +328,13 @@ def predict(model, tokenizer, funcs,
             pred = logit.cpu().numpy()[0][1] > best_threshold
             if pred:
                 vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
-                y_preds.append(1)
-                # all_vul_lines.append(vul_lines[:10])
+                vul_lines2 = lines_with_vul(func[0], vul_lines[:5])
+                method['orig_func'] = func
+                method['vul_lines'] = vul_lines2
             else:
                 vul_lines = None
-                y_preds.append(0)
-            all_vul_lines.append(vul_lines[:10])
-            # y_preds.append(pred)
-            orig_funcs.append(func)
-    if do_linelevel_preds:
-        result = {'methods': orig_funcs,
-                  'vulnerable': y_preds,
-                  'vul_lines': all_vul_lines}
-        return result
+            methods[('method ' + str(idx))] = method
+    if methods == {}:
+        return 'Уязвимости не найдены'
     else:
-        result = {'methods': orig_funcs, 'vulnerable': y_preds}
-        return result
+        return methods
