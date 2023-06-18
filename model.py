@@ -1,10 +1,8 @@
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
-from transformers import RobertaForSequenceClassification, AutoTokenizer, set_seed
+from transformers import RobertaForSequenceClassification, \
+    AutoTokenizer, set_seed
 from torch.utils.data import Dataset, SequentialSampler, DataLoader
-import pandas as pd
-import os
-import tree_sitter
 from tree_sitter import Language, Parser
 import codecs
 import torch
@@ -24,59 +22,60 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 n_gpu = torch.cuda.device_count()
 set_seed(n_gpu)
 
-#Настраиваем парсер для C#
+# Настраиваем парсер для C#
 parser = Parser()
 CSHARP_LANGUAGE = Language('build/my-languages.so', 'c_sharp')
 parser.set_language(CSHARP_LANGUAGE)
 
 
-#Функция считывания файла 
-def file_inner(path): 
-    with codecs.open(path, 'r', 'utf-8') as file: 
-        code = file.read() 
-    return code 
- 
+# Функция считывания файла
+def file_inner(path):
+    with codecs.open(path, 'r', 'utf-8') as file:
+        code = file.read()
+    return code
 
-def cleaner1(code): 
+
+def cleaner1(code):
     """Удаление комментариев в коде, whitespace, приведение к одной строке"""
-    pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)') 
-    code = re.sub(pat,'',code) 
-    code = re.sub('\r','',code) 
-    code = re.sub('\t','',code) 
-    code = code.split('\n') 
-    code = [line.strip() for line in code if line.strip()] 
-    code = ' '.join(code) 
-    return(code)
+    pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)')
+    code = re.sub(pat, '', code)
+    code = re.sub('\r', '', code)
+    code = re.sub('\t', '', code)
+    code = code.split('\n')
+    code = [line.strip() for line in code if line.strip()]
+    code = ' '.join(code)
+    return code
 
 
-def subnodes_by_type(node, node_type_pattern=''): 
+def subnodes_by_type(node, node_type_pattern=''):
     """Выделение сабнодов с методами в дереве tree-sitter"""
-    if re.match(pattern=node_type_pattern, string=node.type, flags=0): 
-        return [node] 
-    nodes = [] 
-    for child in node.children: 
-        nodes.extend(subnodes_by_type(child, node_type_pattern = 'method_declaration')) 
-    return nodes 
+    if re.match(pattern=node_type_pattern, string=node.type, flags=0):
+        return [node]
+    nodes = []
+    for child in node.children:
+        nodes.extend(subnodes_by_type(child,
+                                      node_type_pattern='method_declaration'))
+    return nodes
 
 
-def add_line_delimiter(method): 
+def add_line_delimiter(method):
     """Разделения кода по строкам"""
-    method = method.replace(';', ';\n') 
-    method = method.replace('{', '\n{\n') 
-    method = method.replace('}', '}\n') 
+    method = method.replace(';', ';\n')
+    method = method.replace('{', '\n{\n')
+    method = method.replace('}', '}\n')
     return method
 
 
-def obfuscate(parser, code, node_type_pattern='method_declaration'): 
+def obfuscate(parser, code, node_type_pattern='method_declaration'):
     """Выделение методов(функций) из кода"""
-    tree = parser.parse(bytes(code, 'utf8')) 
-    nodes = subnodes_by_type(tree.root_node, node_type_pattern) 
-    methods = [] 
-    for node in nodes: 
-        if node.start_byte >= node.end_byte: 
-            continue 
+    tree = parser.parse(bytes(code, 'utf8'))
+    nodes = subnodes_by_type(tree.root_node, node_type_pattern)
+    methods = []
+    for node in nodes:
+        if node.start_byte >= node.end_byte:
+            continue
         method = code[node.start_byte:node.end_byte]
-        method = add_line_delimiter(method) 
+        method = add_line_delimiter(method)
         methods.append(method)
     return methods
 
@@ -89,7 +88,6 @@ class RobertaClassificationHead(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.out_proj = nn.Linear(config.hidden_size, 2)
 
-        
     def forward(self, features, **kwargs):
         x = features[:, 0, :]  # take <s> token (equiv. to [CLS])
         x = self.dropout(x)
@@ -100,20 +98,27 @@ class RobertaClassificationHead(nn.Module):
         return x
 
 
-class Model(RobertaForSequenceClassification):   
+class Model(RobertaForSequenceClassification):
     def __init__(self, encoder, config, tokenizer):
         super(Model, self).__init__(config=config)
         self.encoder = encoder
         self.tokenizer = tokenizer
         self.classifier = RobertaClassificationHead(config)
-    
-    
-    def forward(self, attention_mask = None, inputs_embeds = None, output_hidden_states = None, return_dict = True, input_embed=None, labels=None, output_attentions=False, input_ids=None):
+
+    def forward(self, attention_mask=None, inputs_embeds=None,
+                output_hidden_states=None, return_dict=True,
+                input_embed=None, labels=None,
+                output_attentions=False, input_ids=None):
         if output_attentions:
             if input_ids is not None:
-                outputs = self.encoder.roberta(input_ids, attention_mask=input_ids.ne(1), output_attentions=output_attentions) # attention_mask=input_ids.ne(1)
+                outputs = self.encoder \
+                    .roberta(input_ids,
+                             attention_mask=input_ids.ne(1),
+                             output_attentions=output_attentions)
             else:
-                outputs = self.encoder.roberta(inputs_embeds=input_embed, output_attentions=output_attentions)
+                outputs = self.encoder \
+                    .roberta(inputs_embeds=input_embed,
+                             output_attentions=output_attentions)
             attentions = outputs.attentions
             last_hidden_state = outputs.last_hidden_state
             logits = self.classifier(last_hidden_state)
@@ -126,9 +131,14 @@ class Model(RobertaForSequenceClassification):
                 return prob, attentions
         else:
             if input_ids is not None:
-                outputs = self.encoder.roberta(input_ids, attention_mask=input_ids.ne(1), output_attentions=output_attentions)[0] # attention_mask=input_ids.ne(1)
+                outputs = self.encoder \
+                    .roberta(input_ids,
+                             attention_mask=input_ids.ne(1),
+                             output_attentions=output_attentions)[0]
             else:
-                outputs = self.encoder.roberta(inputs_embeds=input_embed, output_attentions=output_attentions)[0]
+                outputs = self.encoder \
+                    .roberta(inputs_embeds=input_embed,
+                             output_attentions=output_attentions)[0]
             logits = self.classifier(outputs)
             prob = torch.softmax(logits, dim=-1)
             if labels is not None:
@@ -137,8 +147,8 @@ class Model(RobertaForSequenceClassification):
                 return loss, prob
             else:
                 return prob
-            
-            
+
+
 class Input(object):
     """A single training/test features for a example."""
     def __init__(self,
@@ -147,7 +157,7 @@ class Input(object):
                  func):
         self.input_tokens = input_tokens
         self.input_ids = input_ids
-        self.func=func
+        self.func = func
 
 
 class TextData(Dataset):
@@ -156,36 +166,37 @@ class TextData(Dataset):
         for i in tqdm(range(len(funcs))):
             self.examples.append(tokenize_samples(funcs[i], tokenizer))
 
-            
     def __len__(self):
         return len(self.examples)
 
-    
     def __getitem__(self, i):
-        return torch.tensor(self.examples[i].input_ids), str(self.examples[i].func)
+        return torch.tensor(self.examples[i].input_ids), \
+            str(self.examples[i].func)
 
 
 config = RobertaConfig.from_pretrained(base)
 config.num_labels = 1
-model = RobertaForSequenceClassification.from_pretrained(base, config=config, ignore_mismatched_sizes=True).to(device)
+model = RobertaForSequenceClassification \
+    .from_pretrained(base, config=config,
+                     ignore_mismatched_sizes=True).to(device)
 model = Model(model, config, tokenizer)
 model.to(device)
 
-#model.load_state_dict(torch.load(pretrain_model_path, map_location=device))
+# model.load_state_dict(torch.load(pretrain_model_path, map_location=device))
 config = PeftConfig.from_pretrained(model_id)
 model = PeftModel.from_pretrained(model, model_id)
 
 
 def cleaner(code):
-    ## Remove code comments
+    # Remove code comments
     pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)')
-    code = re.sub(pat,'',code)
-    code = re.sub('\r','',code)
-    code = re.sub('\t','',code)
+    code = re.sub(pat, '', code)
+    code = re.sub('\r', '', code)
+    code = re.sub('\t', '', code)
     code = code.split('\n')
     code = [line + '\n' for line in code if line.strip()]
     code = ''.join(code)
-    return(code)
+    return code
 
 
 def set_seed(n_gpu, seed=42):
@@ -198,7 +209,7 @@ def set_seed(n_gpu, seed=42):
 
 def tokenize_samples(func, tokenizer, block_size=512):
     clean_func = cleaner(func)
-    code_tokens = tokenizer.tokenize(str(clean_func))[:block_size-2]
+    code_tokens = tokenizer.tokenize(str(clean_func))[:block_size - 2]
     source_tokens = [tokenizer.cls_token] + code_tokens + [tokenizer.sep_token]
     source_ids = tokenizer.convert_tokens_to_ids(source_tokens)
     padding_length = block_size - len(source_ids)
@@ -210,7 +221,8 @@ def clean_special_token_values(all_values, padding=False):
     # special token in the beginning of the seq
     all_values[0] = 0
     if padding:
-        # get the last non-zero value which represents the att score for </s> token
+        # get the last non-zero value which
+        # represents the att score for </s> token
         idx = [index for index, item in enumerate(all_values) if item != 0][-1]
         all_values[idx] = 0
     else:
@@ -230,25 +242,25 @@ def get_word_att_scores(all_tokens: list, att_scores: list) -> list:
 def get_all_lines_score(word_att_scores: list):
     # verified_flaw_lines = [''.join(l) for l in verified_flaw_lines]
     # word_att_scores -> [[token, att_value], [token, att_value], ...]
-    separator = ["Ċ", " Ċ", "ĊĊ", " ĊĊ"]
+    separ = ["Ċ", " Ċ", "ĊĊ", " ĊĊ"]
     # to return
     all_lines_score = []
     score_sum = 0
     line_idx = 0
-    flaw_line_indices = []
     line = ""
-    for i in range(len(word_att_scores)):
-        # summerize if meet line separator or the last token
-        if ((word_att_scores[i][0] in separator) or (i == (len(word_att_scores) - 1))) and score_sum != 0:
-            score_sum += word_att_scores[i][1]
+    ws = word_att_scores
+    for i in range(len(ws)):
+        # summerize if meet line separ or the last token
+        if (ws[i][0] in separ) or (i == (len(ws) - 1)) and score_sum != 0:
+            score_sum += ws[i][1]
             all_lines_score.append(score_sum)
             line = ""
             score_sum = 0
             line_idx += 1
         # else accumulate score
-        elif word_att_scores[i][0] not in separator:
-            line += word_att_scores[i][0]
-            score_sum += word_att_scores[i][1]
+        elif ws[i][0] not in separ:
+            line += ws[i][0]
+            score_sum += ws[i][1]
     return all_lines_score
 
 
@@ -265,8 +277,7 @@ def find_vul_lines(tokenizer, inputs_ids, attentions):
     all_tokens = tokenizer.convert_ids_to_tokens(ids)
     all_tokens = [token.replace("Ġ", "") for token in all_tokens]
     all_tokens = [token.replace("ĉ", "Ċ") for token in all_tokens]
-    #original_lines = ''.join(all_tokens).split("Ċ")
-
+    # original_lines = ''.join(all_tokens).split("Ċ")
     # take from tuple then take out mini-batch attention values
     attentions = attentions[0][0]
     attention = None
@@ -281,18 +292,26 @@ def find_vul_lines(tokenizer, inputs_ids, attentions):
             attention += layer_attention
     # clean att score for <s> and </s>
     attention = clean_special_token_values(attention, padding=True)
-    # attention should be 1D tensor with seq length representing each token's attention value
-    word_att_scores = get_word_att_scores(all_tokens=all_tokens, att_scores=attention)
+    # attention should be 1D tensor with seq length
+    # representing each token's attention value
+    word_att_scores = get_word_att_scores(all_tokens=all_tokens,
+                                          att_scores=attention)
     all_lines_score = get_all_lines_score(word_att_scores)
-    all_lines_score_with_label = sorted(range(len(all_lines_score)), key=lambda i: all_lines_score[i], reverse=True)
+    all_lines_score_with_label = sorted(range(len(all_lines_score)),
+                                        key=lambda i: all_lines_score[i],
+                                        reverse=True)
     return all_lines_score_with_label
 
 
-def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_preds=True):
-
+def predict(model, tokenizer, funcs,
+            device, best_threshold=0.5,
+            do_linelevel_preds=True):
     check_dataset = TextData(tokenizer, funcs)
     check_sampler = SequentialSampler(check_dataset)
-    check_dataloader = DataLoader(check_dataset, sampler=check_sampler, batch_size=1, num_workers=0)
+    check_dataloader = DataLoader(check_dataset,
+                                  sampler=check_sampler,
+                                  batch_size=1,
+                                  num_workers=0)
 
     model.to(device)
     model.eval()
@@ -302,8 +321,10 @@ def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_pr
         inputs_ids =  batch[0].to(device)
         func = batch[1]
         with torch.no_grad():
-            # attentions: a tuple with of one Tensor with 4D shape (batch_size, num_heads, sequence_length, sequence_length)
-            logit, attentions = model(input_ids=inputs_ids, output_attentions=True)
+            # attentions: a tuple with of one Tensor with 4D shape:
+            # (batch_size, num_heads, sequence_length, sequence_length)
+            logit, attentions = model(input_ids=inputs_ids,
+                                      output_attentions=True)
             pred = logit.cpu().numpy()[0][1] > best_threshold
             if pred:
                 vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
