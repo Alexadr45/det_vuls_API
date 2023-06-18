@@ -47,7 +47,7 @@ runs:
       
     - id: parse_output
       run:
-         python3 ${{ github.action_path }}/parse_answer.py ${{ github.action_path }}/otchet.json
+         cd ${{ github.action_path }} && python3 ${{ github.action_path }}/parse_answer.py ${{ github.action_path }}/otchet.json
       shell: bash
          
     - id: list-found-secrets
