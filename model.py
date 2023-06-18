@@ -105,16 +105,17 @@ class Model(RobertaForSequenceClassification):
         self.tokenizer = tokenizer
         self.classifier = RobertaClassificationHead(config)
 
-    def forward(self, attention_mask=None, inputs_embeds=None, 
+    def forward(self, attention_mask=None, inputs_embeds=None,
                 output_hidden_states=None, return_dict=True,
-                input_embed=None, labels=None, 
+                input_embed=None, labels=None,
                 output_attentions=False, input_ids=None):
         if output_attentions:
             if input_ids is not None:
                 outputs = self.encoder.roberta(input_ids,
                                                attention_mask=input_ids.ne(1),
-                                               output_attentions=output_attentions)
-                                            # attention_mask=input_ids.ne(1)
+                                               output_attentions= \
+                                               output_attentions) \
+                                                # attention_mask=input_ids.ne(1)
             else:
                 outputs = self.encoder.roberta(inputs_embeds=input_embed,
                                                output_attentions=output_attentions)
