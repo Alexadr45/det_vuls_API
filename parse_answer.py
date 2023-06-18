@@ -6,19 +6,19 @@ def print_predict(file):
     with open(file) as f:
         data = json.load(f)
     with open('predict.txt', 'w') as f:
-        for filename in data.keys():
+        for name in data.keys():
             if data[filename] == 'Уязвимости не найдены':
                 f.write('Уязвимости не найдены')
             else:
-                f.writelines([f"Имя файла: {filename}\n",
+                f.writelines([f"Имя файла: {name}\n",
                               "Уязвимые методы:\n"])
-                for i, method in enumerate(data[filename].keys()):
+                for i, m in enumerate(data[name].keys()):
                     f.writelines([f"Метод {i+1}:\n",
                                   "Уязвимые строки:\n",
                                   '\n'.join(map(str,
-                                       data[filename][method]['vul_lines'])),
+                                       data[name][m]['vul_lines'])),
                                   "\n", 'Код:\n',
-                                  ''.join(data[filename][method]['orig_func'])])
+                                  ''.join(data[name][m]['orig_func'])])
 
 
 print_predict(sys.argv[1])
