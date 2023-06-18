@@ -42,8 +42,7 @@ runs:
     # send request
     - id: send_request
       run:
-         curl -F "file=@${{ steps.changed-files.outputs.all_changed_files }}" \
-         http://$IP_ADDR:8000/uploadfile >> ${{ github.action_path }}/otchet.txt
+         curl -F "file=@${{ steps.changed-files.outputs.all_changed_files }}" $IP_ADDR:8000/uploadfile >> ${{ github.action_path }}/otchet.txt
       shell: bash
       
     - id: parse_output
