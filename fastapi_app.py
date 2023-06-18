@@ -25,7 +25,9 @@ set_seed(n_gpu)
 
 config = RobertaConfig.from_pretrained(base)
 config.num_labels = 1
-model = RobertaForSequenceClassification.from_pretrained(base, config=config, ignore_mismatched_sizes=True).to(device)
+model = RobertaForSequenceClassification.from_pretrained(base, 
+                                                         config=config, 
+                                                         ignore_mismatched_sizes=True).to(device)
 model = Model(model, config, tokenizer)
 model.to(device)
 
@@ -36,7 +38,8 @@ model = PeftModel.from_pretrained(model, model_id)
 def find_vulnarabilities_in_file(content, model, tokenizer, device):
     methods = obfuscate(parser, cleaner1(file_inner(content)))
     try:
-        predictions = predict(model, tokenizer, methods, device, do_linelevel_preds = True)
+        predictions = predict(model, tokenizer, methods, device, 
+                              do_linelevel_preds = True)
     except:
         predictions = {"Error": "Ошибка сканирования файла"}
         #os.remove(content)
