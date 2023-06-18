@@ -25,7 +25,8 @@ runs:
         files_ignore_separator: " "
       
     - name: Write File
-      run: cd ${{ github.action_path }} && echo ${{ steps.changed-files.outputs.all_changed_files }} > ${{ github.action_path }}/pathes.txt && cat pathes.txt
+      run: cd ${{ github.action_path }} && echo ${{ steps.changed-files.outputs.all_changed_files }} \
+      > ${{ github.action_path }}/pathes.txt && cat pathes.txt
       shell: bash
   
     # получение ip-адреса
@@ -33,18 +34,19 @@ runs:
  #     run: |
  #       cd ${{ github.action_path }} && wget -o wget.txt detsec.ddns.net
  #       cd ${{ github.action_path }} && cat wget.txt
- #       cd ${{ github.action_path }} && echo "IP_ADDR=$(grep "Location" wget.txt | awk -F/ '{print $3}' | awk -F: '{print $1}')" >> $GITHUB_ENV
+ #       cd ${{ github.action_path }} && echo "IP_ADDR=$(grep "Location" wget.txt | \
+ #          awk -F/ '{print $3}' | awk -F: '{print $1}')" >> $GITHUB_ENV
  #     shell: bash
 
     # send request
     - id: send_request
-      run: |
-         curl -F "file=@${{ steps.changed-files.outputs.all_changed_files }}" http://$IP_ADDR:8000/uploadfile >> ${{ github.action_path }}/otchet.txt
+      run:
+         curl -F "file=@${{ steps.changed-files.outputs.all_changed_files }}" \
+         http://$IP_ADDR:8000/uploadfile >> ${{ github.action_path }}/otchet.txt
       shell: bash
       
       
-    - id: list-
-    -secrets
+    - id: list-found-secrets
       run: |
          cat ${{ github.action_path }}/otchet.txt
          echo "found-secrets<<EOF" >> $GITHUB_ENV
@@ -59,10 +61,9 @@ runs:
 #      shell: bash
       
     - name: if there any secrets
-      run:  if grep -v 'Пароли не найдены' ${{ github.action_path }}/otchet.txt; then exit 1; fi
+      run:  if grep -v 'Пароли не найдены' \
+      ${{ github.action_path }}/otchet.txt; then exit 1; fi
       shell: bash     
-
-
 
 # $mail->SMTPSecure='ssl';
 # $mail->Host=""smtp.gmail.com"";
