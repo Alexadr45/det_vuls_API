@@ -116,8 +116,9 @@ class Model(RobertaForSequenceClassification):
                              attention_mask=input_ids.ne(1),
                              output_attentions=output_attentions)
             else:
-                outputs = self.encoder.roberta(inputs_embeds=input_embed,
-                                               output_attentions=output_attentions)
+                outputs = self.encoder \
+                    .roberta(inputs_embeds=input_embed,
+                             output_attentions=output_attentions)
             attentions = outputs.attentions
             last_hidden_state = outputs.last_hidden_state
             logits = self.classifier(last_hidden_state)
