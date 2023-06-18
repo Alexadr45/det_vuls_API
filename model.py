@@ -188,15 +188,15 @@ model = PeftModel.from_pretrained(model, model_id)
 
 
 def cleaner(code):
-    ## Remove code comments
+    # Remove code comments
     pat = re.compile(r'(/\*([^*]|(\*+[^*/]))*\*+/)|(//.*)')
-    code = re.sub(pat,'',code)
-    code = re.sub('\r','',code)
-    code = re.sub('\t','',code)
+    code = re.sub(pat, '', code)
+    code = re.sub('\r', '', code)
+    code = re.sub('\t', '', code)
     code = code.split('\n')
     code = [line + '\n' for line in code if line.strip()]
     code = ''.join(code)
-    return(code)
+    return code
 
 
 def set_seed(n_gpu, seed=42):
@@ -209,7 +209,7 @@ def set_seed(n_gpu, seed=42):
 
 def tokenize_samples(func, tokenizer, block_size=512):
     clean_func = cleaner(func)
-    code_tokens = tokenizer.tokenize(str(clean_func))[:block_size-2]
+    code_tokens = tokenizer.tokenize(str(clean_func))[:block_size - 2]
     source_tokens = [tokenizer.cls_token] + code_tokens + [tokenizer.sep_token]
     source_ids = tokenizer.convert_tokens_to_ids(source_tokens)
     padding_length = block_size - len(source_ids)
@@ -221,7 +221,8 @@ def clean_special_token_values(all_values, padding=False):
     # special token in the beginning of the seq
     all_values[0] = 0
     if padding:
-        # get the last non-zero value which represents the att score for </s> token
+        # get the last non-zero value which
+        # represents the att score for </s> token
         idx = [index for index, item in enumerate(all_values) if item != 0][-1]
         all_values[idx] = 0
     else:
@@ -246,7 +247,6 @@ def get_all_lines_score(word_att_scores: list):
     all_lines_score = []
     score_sum = 0
     line_idx = 0
-    flaw_line_indices = []
     line = ""
     for i in range(len(word_att_scores)):
         # summerize if meet line separator or the last token
