@@ -253,9 +253,6 @@ def get_all_lines_score(word_scores: list):
         if all([any([word_scores[i][0] in separator,
                      (len(word_scores) - 1)]),
                 score_sum != 0]):
-      """if (word_scores[i][0] in separator 
-            # or i == (len(word_scores) - 1))
-                # and score_sum != 0:"""
             score_sum += word_scores[i][1]
             all_lines_score.append(score_sum)
             line = ""
