@@ -42,7 +42,7 @@ def find_vulnarabilities_in_file(content, model, tokenizer, device):
     try:
         predictions = predict(model, tokenizer, methods, device,
                               do_linelevel_preds=True)
-    except:
+    except Exception:
         predictions = {"Error": "Ошибка сканирования файла"}
         # os.remove(content)
         return predictions
@@ -68,9 +68,9 @@ async def create_upload_file(file: UploadFile = File(...)):
         return {"message": "ERROR uploading file"}
     finally:
         file.file.close()
-    res_preds = find_vulnarabilities_in_file(file.filename, 
-                                             model, 
-                                             tokenizer, 
+    res_preds = find_vulnarabilities_in_file(file.filename,
+                                             model,
+                                             tokenizer,
                                              device)
     f_name = file.filename
     os.remove(file.filename)
