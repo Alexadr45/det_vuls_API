@@ -1,15 +1,9 @@
 name: Lint Code Base
 on: push
 jobs:
-  flake8-lint:
+  pylint:
     runs-on: ubuntu-latest
-    name: Lint
+    name: pylint
     steps:
-      - name: Check out source repository
-        uses: actions/checkout@v3
-      - name: Set up Python environment
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-      - name: flake8 Lint
-        uses: py-actions/flake8@v2
+      - name: GitHub Action for pylint
+        uses: cclauss/GitHub-Action-for-pylint@0.7.0
