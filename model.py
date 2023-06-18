@@ -53,28 +53,29 @@ def subnodes_by_type(node, node_type_pattern=''):
         return [node]
     nodes = []
     for child in node.children:
-        nodes.extend(subnodes_by_type(child, node_type_pattern = 'method_declaration'))
-    return nodes 
+        nodes.extend(subnodes_by_type(child, \
+                                      node_type_pattern='method_declaration'))
+    return nodes
 
 
-def add_line_delimiter(method): 
+def add_line_delimiter(method):
     """Разделения кода по строкам"""
-    method = method.replace(';', ';\n') 
-    method = method.replace('{', '\n{\n') 
-    method = method.replace('}', '}\n') 
+    method = method.replace(';', ';\n')
+    method = method.replace('{', '\n{\n')
+    method = method.replace('}', '}\n')
     return method
 
 
-def obfuscate(parser, code, node_type_pattern='method_declaration'): 
+def obfuscate(parser, code, node_type_pattern='method_declaration'):
     """Выделение методов(функций) из кода"""
-    tree = parser.parse(bytes(code, 'utf8')) 
-    nodes = subnodes_by_type(tree.root_node, node_type_pattern) 
-    methods = [] 
-    for node in nodes: 
-        if node.start_byte >= node.end_byte: 
-            continue 
+    tree = parser.parse(bytes(code, 'utf8'))
+    nodes = subnodes_by_type(tree.root_node, node_type_pattern)
+    methods = []
+    for node in nodes:
+        if node.start_byte >= node.end_byte:
+            continue
         method = code[node.start_byte:node.end_byte]
-        method = add_line_delimiter(method) 
+        method = add_line_delimiter(method)
         methods.append(method)
     return methods
 
@@ -87,7 +88,6 @@ class RobertaClassificationHead(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.out_proj = nn.Linear(config.hidden_size, 2)
 
-        
     def forward(self, features, **kwargs):
         x = features[:, 0, :]  # take <s> token (equiv. to [CLS])
         x = self.dropout(x)
@@ -98,7 +98,7 @@ class RobertaClassificationHead(nn.Module):
         return x
 
 
-class Model(RobertaForSequenceClassification):   
+class Model(RobertaForSequenceClassification):
     def __init__(self, encoder, config, tokenizer):
         super(Model, self).__init__(config=config)
         self.encoder = encoder
