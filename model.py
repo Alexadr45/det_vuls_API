@@ -254,7 +254,10 @@ def get_all_lines_score(word_att_scores: list):
 
 def lines_with_vul(func, vul_lines):
     func = func.split('\n')
-    return func[vul_lines]
+    lines_with_vul = []
+    for number in vul_lines:
+        lines_with_vul.append(func[number])
+    return lines_with_vul
 
 
 def find_vul_lines(tokenizer, inputs_ids, attentions):
@@ -304,7 +307,7 @@ def predict(model, tokenizer, funcs, device, best_threshold=0.5, do_linelevel_pr
             pred = logit.cpu().numpy()[0][1] > best_threshold
             if pred:
                 vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
-                vul_lines2 = lines_with_vul(func[0], vul_lines[0])
+                vul_lines2 = lines_with_vul(func[0], vul_lines[:5])
                 method['orig_func'] = func
                 method['vul_lines'] = vul_lines2
             else:
