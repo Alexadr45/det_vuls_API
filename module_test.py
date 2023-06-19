@@ -1,5 +1,4 @@
 import fastapi
-import httpx
 import torch
 from tree_sitter import Language, Parser
 from peft import PeftModel, PeftConfig
