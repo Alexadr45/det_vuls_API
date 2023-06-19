@@ -12,7 +12,7 @@ from fastapi_app import app
 client = TestClient(app)
 
 base = 'microsoft/unixcoder-base'
-model_id = "saved_models"
+model_id = "Model"
 
 tokenizer = AutoTokenizer.from_pretrained(base)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
