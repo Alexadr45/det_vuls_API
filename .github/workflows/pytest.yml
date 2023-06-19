@@ -1,7 +1,5 @@
-name: Python application
-
-on:
-  push:
+name: pytest
+on: push
 jobs:
   build:
     runs-on: ubuntu-latest 
@@ -12,8 +10,8 @@ jobs:
       with:
         python-version: "3.11"
     - name: Install dependencies
-    run: |
-     pip install flake8 pytest
-     - name: Test with pytest
+      run: |
+        pip install flake8 pytest
+    - name: Test with pytest
       run: |
         pytest
