@@ -3,7 +3,7 @@ from tree_sitter import Language, Parser
 from peft import PeftModel, PeftConfig
 from transformers import AutoTokenizer, RobertaForSequenceClassification, \
     set_seed, RobertaConfig
-from model import predict, file_inner, parser, obfuscate, Model
+from model import predict, file_inner, parser, obfuscate, Model, add_line_delimiter, cleaner1
 from fastapi.testclient import TestClient
 from fastapi_app import app
 
@@ -62,7 +62,7 @@ def test_file_inner():
 
 
 def test_cleaner1():
-    string_data = '2 + 2 = 4 /* comment'
+    string_data = cleaner1('2 + 2 = 4 /* comment')
     assert string_data == '2 + 2 = 4'
 
 
