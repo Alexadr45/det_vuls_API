@@ -7,3 +7,4 @@ torch
 fastapi
 pydantic
 uvicorn
+pytest
