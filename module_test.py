@@ -63,10 +63,13 @@ def test_file_inner():
 
 
 def test_cleaner1():
-    string_data = cleaner1('2 + 2 = 4 /*comment/*')
+    string_data = cleaner1('2 + 2 = 4 /*comment*/')
     assert string_data == '2 + 2 = 4'
 
 
 def test_add_line_delimiter():
     string_data = add_line_delimiter('{var_66 = var_BB;return var_66;}')
-    assert string_data == '{\nvar_66 = var_BB;\nreturn var_66;\n}\n', string_data
+    assert string_data == '{ \
+           var_66 = var_BB; \
+           return var_66; \
+           } \'
