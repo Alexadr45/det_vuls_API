@@ -7,3 +7,6 @@ torch
 fastapi
 pydantic
 uvicorn
+pytest
+httpx
+python-multipart
