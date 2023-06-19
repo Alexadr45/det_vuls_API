@@ -12,6 +12,4 @@ jobs:
       with:
         python-version: "3.11"
     - name: Test with pytest
-      uses: fylein/python-pytest-github-action@v1
-      with:
-        args: pip3 install -r requirements.txt && pytest test/unit
+      uses: programmingwithalex/pytester-cov@v1.2.4
