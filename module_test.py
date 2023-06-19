@@ -48,7 +48,7 @@ def test_file_with_vuls():
     result = predict(model, tokenizer, string_data, device)
     assert result != 'Уязвимости не найдены'
 
-    
+
 def test_without_vuls():
     string_data = file_inner("data/file_without_vuls.cs")
     string_data = obfuscate(parser, string_data)
@@ -58,7 +58,8 @@ def test_without_vuls():
 
 def test_file_inner():
     string_data = file_inner("data/file_without_vuls.cs")
-    assert string_data.type() == str 
+    assert string_data.type() == str
+
 
 def cleaner1():
     string_data = '2 + 2 = 4 /* comment'
