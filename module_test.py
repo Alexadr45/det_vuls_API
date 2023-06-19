@@ -1,10 +1,10 @@
-import fastapi
 import torch
 from tree_sitter import Language, Parser
 from peft import PeftModel, PeftConfig
 from transformers import AutoTokenizer, RobertaForSequenceClassification, \
     set_seed, RobertaConfig
-from model import predict, file_inner, parser, obfuscate, Model, add_line_delimiter, cleaner1
+from model import predict, file_inner, parser, obfuscate, Model, \
+    add_line_delimiter, cleaner1
 from fastapi.testclient import TestClient
 from fastapi_app import app
 
@@ -59,14 +59,14 @@ def test_without_vuls():
 
 def test_file_inner():
     string_data = file_inner("data/file_without_vuls.cs")
-    assert string_data.type() == str
+    assert type(string_data) == str
 
 
 def test_cleaner1():
-    string_data = cleaner1('2 + 2 = 4 /* comment')
+    string_data = cleaner1('2 + 2 = 4 /*comment/*')
     assert string_data == '2 + 2 = 4'
 
 
 def test_add_line_delimiter():
     string_data = add_line_delimiter('{var_66 = var_BB;return var_66;}')
-    assert string_data == '{\nvar_66 = var_BB;\nreturn var_66;\n}\n'
+    assert string_data == '{\nvar_66 = var_BB;\nreturn var_66;\n}\n', string_data
