@@ -328,9 +328,9 @@ def predict(model, tokenizer, funcs,
             pred = logit.cpu().numpy()[0][1] > best_threshold
             if pred:
                 vul_lines = find_vul_lines(tokenizer, inputs_ids, attentions)
-                vul_lines2 = lines_with_vul(func[0], vul_lines[:5])
+                top_vul_lines = lines_with_vul(func[0], vul_lines[:5])
                 method['orig_func'] = func
-                method['vul_lines'] = vul_lines2
+                method['vul_lines'] = top_vul_lines
             else:
                 vul_lines = None
             methods[('method ' + str(idx))] = method
