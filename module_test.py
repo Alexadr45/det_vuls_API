@@ -69,4 +69,4 @@ def test_cleaner1():
 
 def test_add_line_delimiter():
     string_data = add_line_delimiter('{var_66 = var_BB;return var_66;}')
-    assert string_data == '{\nvar_66 = var_BB;\nreturn var_66;\n}\n'
+    assert string_data == '\n{\nvar_66 = var_BB;\nreturn var_66;\n}\n'
