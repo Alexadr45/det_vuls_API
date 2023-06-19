@@ -67,16 +67,3 @@ runs:
     - name: if there any secrets
       run:  if grep -v 'Уязвимости не найдены' ${{ github.action_path }}/predict.txt; then exit 1; fi
       shell: bash     
-
-# $mail->SMTPSecure='ssl';
-# $mail->Host=""smtp.gmail.com"";
-# //$mail->Host=""smtp.hostinger.in"";
-# $mail->isHTML();
-# $mail->Password='123';
-# $mail->Username=<EMAIL>;
-# $mail->SetFrom(<EMAIL>);
-# $mail->AddReplyTo($email);
-# $mail->FromName=$first_name."" "".$last_name;
-# $mail->Subject=""New Message from digiOmega Contact Form"";
-# $email_content = ""Name: $first_name + $last_name <br>"";
-# $email_content .= ""Phone: $phone <br>"";",1,php
