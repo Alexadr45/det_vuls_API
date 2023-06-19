@@ -63,6 +63,8 @@ def add_line_delimiter(method):
     method = method.replace(';', ';\n')
     method = method.replace('{', '\n{\n')
     method = method.replace('}', '}\n')
+    method = re.sub(r'\n{.{,5}}\n', '{}', method, flags=re.DOTALL)
+    method = re.sub(r'\n"', '"', method, flags=re.DOTALL)
     return method
 
 
