@@ -34,10 +34,10 @@ jobs:
           password: ${{ secrets.LOGMAIL_PASSWORD }}
           subject: ${{ github.job }} job
           to: ${{ secrets.LOGMAIL_ADDRESS }}
-          from: det_sec tool
+          from: det_vuls tool
           body: |
            Attention! ${{ github.workflow }} process was failed.
-           A person with nickname ${{ github.actor }} in repository ${{ github.repository }} has probably posted a secret.
+           A person with nickname ${{ github.actor }} in repository ${{ github.repository }} has probably posted a vulnarable code!
            Branch ${{ github.ref }}  
            Commit SHA: ${{ github.sha }}
            Main content: 
