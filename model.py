@@ -219,17 +219,21 @@ def tokenize_samples(func, tokenizer, block_size=512):
     return Input(source_tokens, source_ids, clean_func)
 
 
-def clean_special_token_values(all_values, padding=False):
-    # special token in the beginning of the seq
+def clean_special_token_values(all_tokens, all_values, padding=False):
+    # special token in the beginning of the seq 
     all_values[0] = 0
     if padding:
-        # get the last non-zero value which
-        # represents the att score for </s> token
+        # get the last non-zero value which represents the att score for </s> token
         idx = [index for index, item in enumerate(all_values) if item != 0][-1]
         all_values[idx] = 0
     else:
-        # special token in the end of the seq
+        # special token in the end of the seq 
         all_values[-1] = 0
+    # token Ċ
+    separator = ["Ċ", " Ċ", "ĊĊ", " ĊĊ"]
+    for i in range(len(all_values)):
+        if all_tokens[i] in separator:
+            all_values[i] = 0
     return all_values
 
 
@@ -293,7 +297,7 @@ def find_vul_lines(tokenizer, inputs_ids, attentions):
         else:
             attention += layer_attention
     # clean att score for <s> and </s>
-    attention = clean_special_token_values(attention, padding=True)
+    attention = clean_special_token_values(all_tokens, attention, padding=True)
     # attention should be 1D tensor with seq length
     # representing each token's attention value
     word_att_scores = get_word_att_scores(all_tokens=all_tokens,
