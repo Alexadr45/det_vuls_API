@@ -8,7 +8,7 @@ outputs:
     value: ${{ env.found-secrets }}
 
 env:
-  IP_ADDR: '158.160.32.83'
+  IP_ADDR: '158.160.102.185'
   found-secrets: ''
   
 
@@ -42,7 +42,7 @@ runs:
     # send request
     - id: send_request
       run:
-         curl -F "file=@${{ steps.changed-files.outputs.all_changed_files }}" 158.160.32.83:8000/uploadfile >> ${{ github.action_path }}/otchet.json
+         curl -F "file=@${{ steps.changed-files.outputs.all_changed_files }}" 158.160.102.185:8000/uploadfile >> ${{ github.action_path }}/otchet.json
       shell: bash
       
     - id: parse_output
